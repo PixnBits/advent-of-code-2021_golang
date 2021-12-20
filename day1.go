@@ -7,6 +7,15 @@ import (
   "os"
 )
 
+// TODO: pass by reference to improve performance?
+func sum(window []int) int {
+  total := 0
+  for _, num := range window {
+    total += num
+  }
+  return total
+}
+
 func main() {
   deeperCount := 0
   shallowerCount := 0
@@ -19,30 +28,43 @@ func main() {
 
   scanner := bufio.NewScanner(file)
 
-  var previous int = 0
+  previous := 0
+  windowBacking := [3]int{0, 0, 0}
+  window := windowBacking[:]
+
   for scanner.Scan() {
     lineDepth, err := strconv.Atoi(scanner.Text())
     if err != nil {
       log.Fatal(err)
     }
-    // log.Print(lineDepth)
+
+    // shift off the front, push on to the end
+    window = window[1:]
+    window = append(window, lineDepth)
+
+    if window[0] == 0 {
+      log.Printf("%v (still filling the window)", lineDepth)
+      continue
+    }
+
+    current := sum(window)
 
     if previous == 0 {
-      previous = lineDepth
+      previous = current
       log.Printf("%v (N/A - no previous measurement)", lineDepth)
       continue
     }
 
-    if lineDepth < previous {
+    if current < previous {
       shallowerCount += 1
-      log.Printf("%v (decreased)", lineDepth)
-    } else if lineDepth > previous {
+      log.Printf("%v (decreased) %v from %v", lineDepth, current, previous)
+    } else if current > previous {
       deeperCount += 1
-      log.Printf("%v (increased)", lineDepth)
+      log.Printf("%v (increased) %v from %v", lineDepth, current, previous)
     } else {
-      log.Printf("%v (unchanged)", lineDepth)
+      log.Printf("%v (no change) %v from %v", lineDepth, current, previous)
     }
-    previous = lineDepth
+    previous = current
   }
 
   if err := scanner.Err(); err != nil {
