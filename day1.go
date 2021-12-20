@@ -8,11 +8,6 @@ import (
 )
 
 func main() {
-  // fmt.Println("Hello, World!")
-  // for i := 0; i < 5; i++ {
-  //   defer fmt.Printf("%d ", i)
-  // }
-
   deeperCount := 0
   shallowerCount := 0
 
@@ -24,14 +19,7 @@ func main() {
 
   scanner := bufio.NewScanner(file)
 
-  // scanner.Scan()
-  // previous, err := strconv.Atoi(scanner.Text())
-  // if err != nil {
-  //   log.Fatal(err)
-  // }
-
   var previous int = 0
-
   for scanner.Scan() {
     lineDepth, err := strconv.Atoi(scanner.Text())
     if err != nil {
@@ -44,8 +32,7 @@ func main() {
       log.Printf("%v (N/A - no previous measurement)", lineDepth)
       continue
     }
-    // log.Println(lineDepth)
-    // log.Println(lineDepth)
+
     if lineDepth < previous {
       shallowerCount += 1
       log.Printf("%v (decreased)", lineDepth)
