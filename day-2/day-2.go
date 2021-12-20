@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+  aim := 0
   depth := 0
   relativeHorizTravel := 0
 
@@ -36,12 +37,13 @@ func main() {
     switch commandParts[1] {
     case "forward":
       relativeHorizTravel += commandAmount
+      depth += aim * commandAmount
     case "up":
-      depth -= commandAmount
+      aim -= commandAmount
     case "down":
-      depth += commandAmount
+      aim += commandAmount
     default:
-      log.Fatal("unknown command " +commandParts[1])
+      log.Fatal("unknown command " + commandParts[1])
     }
 
     log.Printf("current position: %v over, %v down", relativeHorizTravel, depth)
