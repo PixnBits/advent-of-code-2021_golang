@@ -124,8 +124,40 @@ func buildMap(bounds Point, lines []Line) [][]int {
         voxels[line.Start.Y][i] += 1
       }
     } else {
-      // warn
-      log.Println("unhandled line %v", line)
+      // 45 diag
+      // TODO: could this be simpler? ex: tried to min & max too soon?
+      xStart := min(line.Start.X, line.End.X)
+      xEnd := max(line.Start.X, line.End.X)
+      yStart := min(line.Start.Y, line.End.Y)
+      yEnd := max(line.Start.Y, line.End.Y)
+
+      diffX := xEnd - xStart
+      diffY := yEnd - yStart
+      if (diffX != diffY) {
+        log.Fatal("non-45 line in data %v", line)
+      }
+
+      xDirection := 1
+      if (xStart != line.Start.X) {
+        xDirection = -1
+        xStart = line.Start.X
+        xEnd = line.End.X
+      }
+      yDirection := 1
+      if (yStart != line.Start.Y) {
+        yDirection = -1
+        yStart = line.Start.Y
+        yEnd = line.End.Y
+      }
+
+      // log.Printf("line: %v", line)
+      // log.Printf("start & end X: %v, %v", xStart, xEnd)
+      // log.Printf("start & end Y: %v, %v", yStart, yEnd)
+      // log.Printf("direction X & Y: %v, %v", xDirection, yDirection)
+
+      for i := 0; i <= diffX; i++ {
+        voxels[yStart + i * yDirection][xStart + i * xDirection] += 1
+      }
     }
   }
 
