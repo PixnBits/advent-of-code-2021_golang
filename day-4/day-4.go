@@ -137,28 +137,53 @@ func main() {
   log.Printf("draws: %v", draws);
   log.Printf("boards: %v", boards);
 
-  bestWinningDraw := math.MaxInt
-  winningScore := -1
-  bestBoardIndex := -1
+  firstWinningDraw := math.MaxInt
+  firstWinningScore := -1
+  firstBoardIndex := -1
+
+  lastWinningDraw := -1
+  lastWinningScore := -1
+  lastBoardIndex := -1
+
   for boardIndex, boards := range(boards) {
     drawsToWin, score := calcBoardWinningScore(draws, boards)
-    if (drawsToWin < bestWinningDraw && drawsToWin != -1) {
-      bestWinningDraw = drawsToWin
-      winningScore = score
-      bestBoardIndex = boardIndex
+    if (drawsToWin < firstWinningDraw && drawsToWin != -1) {
+      firstWinningDraw = drawsToWin
+      firstWinningScore = score
+      firstBoardIndex = boardIndex
+    }
+
+    // TODO: other conditions?
+    if (drawsToWin > lastWinningDraw) {
+      lastWinningDraw = drawsToWin
+      lastWinningScore = score
+      lastBoardIndex = boardIndex
     }
   }
 
-  if bestWinningDraw == math.MaxInt {
-    log.Println("no winning boards")
-    os.Exit(0)
+  log.Println("first winning board:")
+  if firstWinningDraw == math.MaxInt {
+    log.Println(" no winning boards")
+  } else {
+    // humans start at 1
+    log.Printf(
+      "  board %v wins in %v draws with score %v",
+      firstBoardIndex + 1,
+      firstWinningDraw,
+      firstWinningScore,
+    )
   }
 
-  // humans start at 1
-  log.Printf(
-    "board %v wins in %v draws with score %v",
-    bestBoardIndex + 1,
-    bestWinningDraw,
-    winningScore,
-  )
+  log.Println("last winning board:")
+  if lastWinningDraw == -1 {
+    log.Println(" no winning boards??")
+  } else {
+    // humans start at 1
+    log.Printf(
+      "  board %v wins in %v draws with score %v",
+      lastBoardIndex + 1,
+      lastWinningDraw,
+      lastWinningScore,
+    )
+  }
 }
