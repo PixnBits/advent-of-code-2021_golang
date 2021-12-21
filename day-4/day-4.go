@@ -68,60 +68,67 @@ func indexIn(list []int, val int) int {
   return -1
 }
 
-func findLeastDrawsToWinBoard(draws []int, board [5][5]int) (int, [5]int) {
-  // first check each row
-  bestRowDraws := math.MaxInt
-  var bestRow [5]int
-  for _, row := range(board) {
+func calcBoardWinningScore(draws []int, board [5][5]int) (int, int) {
+  // map the board's squares to the first draw to mark it off
+  // log.Printf("board: %v", board)
+  var boardDraws [5][5]int
+  for rowIndex, row := range(board) {
+    var rowDraws [5]int
+    for colIndex, square := range(row) {
+      rowDraws[colIndex] = indexIn(draws, square)
+    }
+    boardDraws[rowIndex] = rowDraws
+  }
+  // log.Printf("boardDraws: %v", boardDraws)
+
+  // find the row or column with the lowest draws required Min(Max(squareDraws))
+  // rows
+  bestWinningDraw := math.MaxInt
+  for _, rowDraws := range(boardDraws) {
     drawsToWinRow := -1
-    // var squareDrawsRequired []int
-    for _, square := range(row) {
-      // log.Printf("square %v", square)
-      // log.Printf("index? %v", indexIn(draws, square))
-      squareDrawsRequired := indexIn(draws, square)
-      if (drawsToWinRow < squareDrawsRequired && squareDrawsRequired > 0) {
-        drawsToWinRow = squareDrawsRequired
+    for _, squareDraw := range(rowDraws) {
+      if drawsToWinRow < squareDraw && squareDraw != -1 {
+        drawsToWinRow = squareDraw
       }
     }
     // log.Printf("drawsToWinRow: %v", drawsToWinRow)
-    if (drawsToWinRow < bestRowDraws && drawsToWinRow > 0) {
-      bestRowDraws = drawsToWinRow
-      bestRow = row
+    if drawsToWinRow < bestWinningDraw && drawsToWinRow != -1 {
+      bestWinningDraw = drawsToWinRow
     }
   }
-  // log.Printf("bestRow: %v %v", bestRowDraws, bestRow)
-
-  // then check each column
-  bestColDraws := math.MaxInt
-  var bestCol [5]int
+  // log.Printf("bestWinningDraw: %v", bestWinningDraw)
+  // columns
   for colIndex := 0; colIndex < 5; colIndex++ {
-    var colSquares [5]int
     drawsToWinCol := -1
     for rowIndex := 0; rowIndex < 5; rowIndex++ {
-      square := board[rowIndex][colIndex]
-      colSquares[rowIndex] = square
-      squareDrawsRequired := indexIn(draws, square)
-      // log.Printf("square, drawsRequired: %v, %v", square, squareDrawsRequired)
-      if (drawsToWinCol < squareDrawsRequired && squareDrawsRequired >= 0) {
-        drawsToWinCol = squareDrawsRequired
+      squareDraw := boardDraws[rowIndex][colIndex]
+      if (drawsToWinCol < squareDraw && squareDraw != -1) {
+        drawsToWinCol = squareDraw
       }
     }
     // log.Printf("drawsToWinCol: %v", drawsToWinCol)
-    if (drawsToWinCol < bestColDraws && drawsToWinCol >= 0) {
-      bestColDraws = drawsToWinCol
-      bestCol = colSquares
+    if drawsToWinCol < bestWinningDraw && drawsToWinCol != -1 {
+      bestWinningDraw = drawsToWinCol
     }
   }
-  // log.Printf("bestCol: %v %v", bestColDraws, bestCol)
+  // log.Printf("bestWinningDraw: %v", bestWinningDraw)
 
-  if (bestRowDraws == math.MaxInt) {
-    if (bestColDraws == math.MaxInt) {
-      // no winning rows or columns
-      return -1, [5]int{-1, -1, -1, -1, -1}
+  // now calculate the score
+  // sum all unmarked squares
+  // that is, sum the square values if their draw index is over the winning draw
+  sum := 0
+  for rowIndex, rowDraws := range(boardDraws) {
+    for colIndex, squareDraw := range(rowDraws) {
+      if (squareDraw > bestWinningDraw || squareDraw == -1) {
+        sum += board[rowIndex][colIndex]
+      }
     }
-    return bestRowDraws, bestRow
   }
-  return bestColDraws, bestCol
+  // log.Printf("sum of unmarked squares: %v", sum)
+  // log.Printf("last number drawn to win: %v", draws[bestWinningDraw])
+  score := sum * draws[bestWinningDraw]
+  // log.Printf("winning score for board: %v", score)
+  return bestWinningDraw + 1, score
 }
 
 func main() {
@@ -130,30 +137,28 @@ func main() {
   log.Printf("draws: %v", draws);
   log.Printf("boards: %v", boards);
 
-  bestDrawCount := math.MaxInt
+  bestWinningDraw := math.MaxInt
+  winningScore := -1
   bestBoardIndex := -1
-  var bestSquares [5]int
-  for boardIndex, board := range(boards) {
-    drawCount, squares := findLeastDrawsToWinBoard(draws, board)
-    if (drawCount < bestDrawCount && drawCount >= 0) {
-      bestDrawCount = drawCount
+  for boardIndex, boards := range(boards) {
+    drawsToWin, score := calcBoardWinningScore(draws, boards)
+    if (drawsToWin < bestWinningDraw && drawsToWin != -1) {
+      bestWinningDraw = drawsToWin
+      winningScore = score
       bestBoardIndex = boardIndex
-      bestSquares = squares
     }
   }
 
-  if bestDrawCount == math.MaxInt {
+  if bestWinningDraw == math.MaxInt {
     log.Println("no winning boards")
     os.Exit(0)
   }
 
-  // most of the time we're lying, using the index instead of the actual count
-  // so here we need to turn the draw index into the value a human expects
-  // similar for board index, though we only use it locally
-  log.Printf("board %v wins in %v draws", bestBoardIndex + 1, bestDrawCount + 1)
-  squaresSum := 0
-  for _, square := range(bestSquares) {
-    squaresSum += square
-  }
-  log.Printf("winning score: %v = SUM(%v)", squaresSum, bestSquares)
+  // humans start at 1
+  log.Printf(
+    "board %v wins in %v draws with score %v",
+    bestBoardIndex + 1,
+    bestWinningDraw,
+    winningScore,
+  )
 }
